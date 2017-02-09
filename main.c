@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define nout 150
+#define nout 220
 #define nin 4
 #define pi 3.14
 
