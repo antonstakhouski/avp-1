@@ -1,6 +1,6 @@
 all: output
 output: main.o
-	gcc main.o -o lab
+	gcc main.o -o lab -lrt
 main.o: main.c
 	gcc -c -Wall -pedantic -O2 -fno-tree-vectorize main.c
 vectorize:
