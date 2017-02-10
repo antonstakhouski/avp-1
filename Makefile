@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -c -save-temps -fverbose-asm -Wall -masm=intel -pedantic -O2
+CFLAGS = -c -std=c11 -save-temps -fverbose-asm -Wall -masm=intel -O2
 OUTPUT_NAME = lab
 BUILD = $(CC) main.o -o $(OUTPUT_NAME)
 
@@ -9,8 +9,8 @@ no-vect: main.o-no-vect
 vect: main.o-vect
 	$(BUILD)
 main.o-no-vect: main.c
-	$(CC) $(CFLAGS) -fno-tree-vectorize main.c
+	$(CC) $(CFLAGS) -fno-tree-vectorize -mno-sse2 main.c
 main.o-vect: main.c
-	$(CC) $(CFLAGS) -ftree-vectorize main.c
+	$(CC) $(CFLAGS) -ftree-vectorize -msse2 main.c
 clean:
-	rm -f *.o *.s lab
+	rm -f *.o *.s *.i lab

@@ -1,9 +1,10 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define nout 220
-#define nin 4
+#define nout 128
+#define nin 16
 #define pi 3.14
 
 struct timespec diff(struct timespec start, struct timespec end);
@@ -18,7 +19,6 @@ float**** matrix_init(){
 			for(int yin = 0; yin < nin; yin++){
 				matrix[yout][xout][yin] = (float*)malloc(sizeof(float)*nin);
 				for(int xin = 0; xin < nin; xin++){
-					srand(time(NULL));
 					int r = rand() % 100;
 					matrix[yout][xout][yin][xin] = (float)r / pi;
 				}
@@ -63,21 +63,35 @@ float**** matrix_mul(float**** a, float**** b){
 	c = matrix_init_zero();
 
 	struct timespec time1, time2, res;
+	float* a_;
+	float* b_;
+	float* c_;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
 
 	for(int jout = 0; jout < nout; jout++)
 		for(int iout = 0; iout < nout; iout++)
-			for(int rout = 0; rout < nout; rout++)
-				for(int iin = 0; iin < nin; iin++)	
-					for(int rin = 0; rin <nin; rin++)
-						for(int jin = 0; jin < nin; jin++)
-							c[jout][iout][jin][iin] += a[rout][jout][rin][iin] * b[rout][jout][rin][jin];
-	
+			for(int jin = 0; jin < nin; jin++){	
+				c_ = c[jout][iout][jin];
+				a_ = a[jout][iout][jin];
+				for(int iin = 0; iin <nin; iin++){
+					b_ = b[jout][iout][iin];
+					for(int rin = 0; rin < nin; rin++)
+						c_[rin] += a_[iin] * b_[rin];
+				}
+			}
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
 	res = diff(time1,time2);
-	printf("%lld.", (long long)res.tv_sec);
-	printf("%ld\n", res.tv_nsec);
+	dprintf(2, "%lld.", (long long)res.tv_sec);
+	dprintf(2, "%ld\n", res.tv_nsec);
 	return c;
+}
+
+void print_mat(float**** mat){
+	for(int jout = 0; jout < nout; jout++)
+		for(int iout = 0; iout < nout; iout++)
+			for(int jin = 0; jin < nin; jin++)
+				for(int iin = 0; iin < nin; iin++)
+					printf("%f\n", mat[jout][iout][jin][iin]);
 }
 
 int main(){	
@@ -90,6 +104,7 @@ int main(){
 	matrix_c = matrix_init();
 
 	matrix_c = matrix_mul(matrix_a, matrix_b);
+	print_mat(matrix_c);
 
 	return 0;
 }
