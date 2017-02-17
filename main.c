@@ -1,87 +1,78 @@
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define n 100 
+#define n 4
 #define pi 3.14
 
 struct timespec diff(struct timespec start, struct timespec end);
 
-float** matrix_init(){
+float** matrix_init() {
 	float** matrix;
 	matrix = (float**)malloc(sizeof(float*)*n);
-	for(int y = 0; y < n; y++){{
-		matrix[y] = (float*)malloc(sizeof(float)*n);
-        for(int x = 0; x < n; x++){
-            matrix[y][x] = float(rand() % 100) / pi;
-        }
+	for (int i = 0; i < n; i++) {
+		matrix[i] = (float*)malloc(sizeof(float)*n);
+		for (int j = 0; j < n; j++) {
+				matrix[i][j] = (float)(rand() % 100) / pi;
+			}
+		}
+	return matrix;
+}
+
+float** matrix_init_zero() {
+	float** matrix;
+	matrix = (float**)malloc(sizeof(float*)*n);
+	for (int i = 0; i < n; i++) {
+		matrix[i] = (float*)calloc(n, sizeof(float));
 	}
 	return matrix;
 }
 
-float** matrix_init_zero(){
-	float** matrix;
-	matrix = (float**)malloc(sizeof(float*)*n);
-	for(int y = 0; y < n; y++){{
-		matrix[y] = (float*)calloc(n, sizeof(float));
-	}
-	return matrix;
-}
-
-struct timespec diff(struct timespec start, struct timespec end){
+struct timespec diff(struct timespec start, struct timespec end) {
 	struct timespec temp;
-	if ((end.tv_nsec-start.tv_nsec)<0) {
-		temp.tv_sec = end.tv_sec-start.tv_sec-1;
-		temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
-	} else {
-		temp.tv_sec = end.tv_sec-start.tv_sec;
-		temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+	if ((end.tv_nsec - start.tv_nsec)<0) {
+		temp.tv_sec = end.tv_sec - start.tv_sec - 1;
+		temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+	}
+	else {
+		temp.tv_sec = end.tv_sec - start.tv_sec;
+		temp.tv_nsec = end.tv_nsec - start.tv_nsec;
 	}
 	return temp;
 }
 
-float** matrix_mul(float** a, float** b){
+float** matrix_mul(float** a, float** b) {
 	float** c;
 	c = matrix_init_zero();
-
-	struct timespec time1, time2, res;
-	float* a_;
-	float* b_;
-	float* c_;
+    struct timespec time1, time2, res;
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
-
-	for(int jout = 0; jout < nout; jout++)
-		for(int iout = 0; iout < nout; iout++)
-			for(int jin = 0; jin < nin; jin++){	
-				c_ = c[jout][iout][jin];
-				a_ = a[jout][iout][jin];
-				for(int iin = 0; iin <nin; iin++){
-					b_ = b[jout][iout][iin];
-					for(int rin = 0; rin < nin; rin++)
-						c_[rin] += a_[iin] * b_[rin];
-				}
-			}
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
+	
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++) 
+			for (int r = 0; r < n; r++)
+				c[i][j] += a[i][r] * b[r][j];
+    
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
 	res = diff(time1,time2);
-	dprintf(2, "%lld.", (long long)res.tv_sec);
-	dprintf(2, "%ld\n", res.tv_nsec);
+	printf("%lld.", (long long)res.tv_sec);
+	printf("%ld\n", res.tv_nsec);
 	return c;
 }
 
-void print_mat(float**** mat){
-	for(int jout = 0; jout < nout; jout++)
-		for(int iout = 0; iout < nout; iout++)
-			for(int jin = 0; jin < nin; jin++)
-				for(int iin = 0; iin < nin; iin++)
-					printf("%f\n", mat[jout][iout][jin][iin]);
+void print_mat(float** mat) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			printf("%f ", mat[i][j]);
+		}
+		printf("\n");
+	}
 }
 
-int main(){	
-	float**** matrix_a;
-	float**** matrix_b;
-	float**** matrix_c;
-	
+int main() {
+	float** matrix_a;
+	float** matrix_b;
+	float** matrix_c;
+
 	matrix_a = matrix_init();
 	matrix_b = matrix_init();
 	matrix_c = matrix_init();
