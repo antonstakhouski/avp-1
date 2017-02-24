@@ -1,7 +1,7 @@
 CC = gcc
-CFLAGS = -c -std=c11 -save-temps -fverbose-asm -Wall -masm=intel -O2
+CFLAGS = -c -save-temps -O2 -fverbose-asm -Wall -masm=intel
 OUTPUT_NAME = lab
-BUILD = $(CC) -lrt main.o -o $(OUTPUT_NAME)
+BUILD = $(CC) main.o -o $(OUTPUT_NAME)
 
 all: no-vect
 no-vect: main.o-no-vect
