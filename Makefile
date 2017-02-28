@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -c -save-temps -O2 -fverbose-asm -Wall -masm=intel
+CFLAGS = -c -march=native -save-temps -O2 -fverbose-asm -Wall -masm=intel
 OUTPUT_NAME = lab
 BUILD = $(CC) main.o -o $(OUTPUT_NAME)
 
-all: no-vect
+all: vect
 no-vect: main.o-no-vect
 	$(BUILD)
 vect: main.o-vect
