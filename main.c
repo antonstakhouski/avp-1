@@ -7,7 +7,9 @@
 
 #define N 1024
 #define PI 3.14
-#define BLOCK_SIZE 128
+#define L3_BLOCK_SIZE 512
+#define L2_BLOCK_SIZE 128
+#define L1_BLOCK_SIZE 32
 
 struct timespec diff(struct timespec start, struct timespec end);
 
@@ -116,13 +118,28 @@ void dgemm_cache(float** c, float** a, float** b){
     struct timespec time1, time2, res;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
 
-    for(int cy = 0; cy < N; cy += BLOCK_SIZE){
-        for(int by = 0; by < N; by += BLOCK_SIZE){
-            for(int bx = 0; bx < N; bx+=BLOCK_SIZE){
-                for(int cy3 = cy; cy3 < cy + BLOCK_SIZE; cy3++){
-                    for(int by3 = by; by3 < by + BLOCK_SIZE; by3++){
-                        for(int bx3 = bx; bx3 < bx + BLOCK_SIZE; bx3++){
-                            c[cy3][bx3] += a[cy3][by3] * b[by3][bx3];
+    for(int cy = 0; cy < N; cy += L3_BLOCK_SIZE){
+        for(int by = 0; by < N; by += L3_BLOCK_SIZE){
+            for(int bx = 0; bx < N; bx+=L3_BLOCK_SIZE){
+
+                for(int cy3 = cy; cy3 < cy + L3_BLOCK_SIZE; cy3 += L2_BLOCK_SIZE){
+                    for(int by3 = by; by3 < by + L3_BLOCK_SIZE; by3 += L2_BLOCK_SIZE){
+                        for(int bx3 = bx; bx3 < bx + L3_BLOCK_SIZE; bx3 += L2_BLOCK_SIZE){
+
+                            for(int cy2 = cy3; cy2 < cy3 + L2_BLOCK_SIZE; cy2 += L1_BLOCK_SIZE){
+                                for(int by2 = by3; by2 < by3 + L2_BLOCK_SIZE; by2 += L1_BLOCK_SIZE){
+                                    for(int bx2 = bx3; bx2 < bx3 + L2_BLOCK_SIZE; bx2 += L1_BLOCK_SIZE){
+
+                                        for(int cy1 = cy2; cy1 < cy2 + L1_BLOCK_SIZE; cy1++){
+                                            for(int by1 = by2; by1 < by2 + L1_BLOCK_SIZE; by1++){
+                                                for(int bx1 = bx2; bx1 < bx2 + L1_BLOCK_SIZE; bx1++){
+                                                    c[cy1][bx1] += a[cy1][by1] * b[by1][bx1];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
