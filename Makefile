@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -c -march=native -save-temps -O2 -fverbose-asm -Wall -masm=intel
+CFLAGS = -c -g -march=native -save-temps -O2 -fverbose-asm -Wall -masm=intel
 OUTPUT_NAME = lab
 BUILD = $(CC) main.o -o $(OUTPUT_NAME)
 

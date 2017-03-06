@@ -7,6 +7,7 @@
 
 #define N 1024
 #define PI 3.14
+#define BLOCK_SIZE 128
 
 struct timespec diff(struct timespec start, struct timespec end);
 
@@ -71,20 +72,10 @@ void dgemm(float** c, float** a, float** b)
     struct timespec time1, time2, res;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
 
-    int ax = 0;
-    int ay = 0;
     for(int cy = 0; cy < N; cy++ ){
         for(int by = 0; by < N; by++){
-            for(int bx = 0, cx = 0; bx < N && cx < N; bx++, cx++){
-                c[cy][cx] += a[ay][ax] * b[by][bx];
-
-            }
-            if(ax + 1 < N){
-                ax++;
-            }
-            else{
-                ax = 0;
-                ay++;
+            for(int bx = 0; bx < N; bx++){
+                c[cy][bx] += a[cy][by] * b[by][bx];
             }
         }
     }
@@ -101,24 +92,15 @@ void dgemm_intrinsics(float** c, float** a, float** b)
     struct timespec time1, time2, res;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
 
-    size_t ax = 0;
-    size_t ay = 0;
     __m256 aa, bb, cc;
     for(size_t cy = 0; cy < N; cy++ ){
         for(size_t by = 0; by < N; by++){
-            aa = _mm256_broadcast_ss(&(a[ay][ax]));
+            aa = _mm256_broadcast_ss(&(a[cy][by]));
             for(size_t bx = 0; bx < N; bx += 8){
                 bb = _mm256_loadu_ps(&(b[by][bx]));
                 cc = _mm256_loadu_ps(&(c[cy][bx]));
                 cc = _mm256_add_ps(cc, _mm256_mul_ps(aa, bb));
                 _mm256_storeu_ps(&(c[cy][bx]), cc);
-            }
-            if(ax + 1 < N){
-                ax++;
-            }
-            else{
-                ax = 0;
-                ay++;
             }
         }
     }
@@ -129,7 +111,30 @@ void dgemm_intrinsics(float** c, float** a, float** b)
     dprintf(2, "%ld\n", res.tv_nsec);
 }
 
+void dgemm_cache(float** c, float** a, float** b){
+    matrix_zero(c);
+    struct timespec time1, time2, res;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
 
+    for(int cy = 0; cy < N; cy += BLOCK_SIZE){
+        for(int by = 0; by < N; by += BLOCK_SIZE){
+            for(int bx = 0; bx < N; bx+=BLOCK_SIZE){
+                for(int cy3 = cy; cy3 < cy + BLOCK_SIZE; cy3++){
+                    for(int by3 = by; by3 < by + BLOCK_SIZE; by3++){
+                        for(int bx3 = bx; bx3 < bx + BLOCK_SIZE; bx3++){
+                            c[cy3][bx3] += a[cy3][by3] * b[by3][bx3];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
+    res = diff(time1,time2);
+    dprintf(2, "cache: %lld.", (long long)res.tv_sec);
+    dprintf(2, "%ld\n", res.tv_nsec);
+}
 
 void print_mat(float** mat) {
     for (int i = 0; i < N; i++) {
@@ -158,7 +163,8 @@ int main() {
     /** print_mat(matrix_c); */
 
     dgemm(matrix_c, matrix_a, matrix_b);
-    dgemm_intrinsics(matrix_c, matrix_a, matrix_b);
+    /** dgemm_intrinsics(matrix_c, matrix_a, matrix_b); */
+    dgemm_cache(matrix_c, matrix_a, matrix_b);
     /** print_mat(matrix_c);  */
 
     return 0;
